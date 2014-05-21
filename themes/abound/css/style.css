@@ -1,0 +1,18 @@
+@charset "UTF-8";
+/* CSS Document */
+@font-face {
+    font-family: "Carrois Gothic";
+    font-style: normal;
+    font-weight: 400;
+    src: local("Carrois Gothic"), local("CarroisGothic-Regular"), url("http://themes.googleusercontent.com/static/fonts/carroisgothic/v2/GCgb7bssGpwp7V5ynxmWy2IHn70NeZKJ0uStDo7Dza8.woff") format("woff");
+}
+
+body{ background:url(/themes/abound/img/login_bg.png) top repeat-x #263786; position: relative; padding:0; margin:0;}
+
+.login_box{width:400px; margin:150px auto 200px;}
+.login_box h1{ color:#fff; text-shadow:1px 1px #000; text-align:center; font-family:'Carrois Gothic',sans-serif; font-size:36px; }
+.login_box form{margin:0 auto;width: 300px; display:block; padding:20px; background:#eeeeee; -webkit-border-radius: 5px; -moz-border-radius: 5px; border-radius: 5px; }
+.login_box form input{ display:block; padding:15px; -webkit-border-radius: 5px; -moz-border-radius: 5px; border-radius: 5px; border:1px solid #cccccc; background-color: #FFFFFF; box-shadow: 0 1px 1px rgba(0, 0, 0, 0.075) inset; width:265px;; margin-bottom: 20px;}
+button{display:block; padding:5px; background:#555555; color:#fff; cursor:pointer; width:85px; margin:0 auto; -webkit-border-radius: 5px; -moz-border-radius: 5px; border-radius: 5px; border:none; font-size:20px; font-family:'Carrois Gothic',sans-serif;}
+
+
