@@ -1,27 +1,17 @@
 <?php
 
 /**
- * Performs commands for the search engine.
+ * Performs commands for the distributed anayltics engine.
  * @author : Ramzi Sh. Alqrainy - ramzi.alqrainy@gmail.com
- * @copyright Copyright (c) 2013
+ * @copyright Copyright (c) 2014
  * @version 0.1
  */
-class SearchCommand extends CConsoleCommand {
+class DACommand extends CConsoleCommand {
 
     private static $lock = null;
     private static $lock_fn = null;
     private static $lock_fl = null;
     private static $dataSolr = 0;
-    private static $all_countries = array();
-    private static $all_cities = array();
-    private static $countries_ids = array(1 => 1, 2 => 1, 4 => 1, 5 => 1, 6 => 1, 7 => 1, 8 => 1, 9 => 1, 11 => 1, 12 => 1, 13 => 1, 14 => 1, 15 => 1, 17 => 1, 18 => 1, 19 => 1, 20 => 1, 22 => 1, 23 => 1, 24 => 1);
-    private static $collection_data = array();
-    private static $all_categoriesLevel1 = array();
-    private static $all_categoriesLevel2 = array();
-    private static $all_categoriesLevel3 = array();
-    private static $all_categoriesLevel4 = array();
-    private static $all_categoriesLevel5 = array();
-    private static $all_categoriesLevel6 = array();
 
     /**
      * getDBConnection is a function that connect with DB
@@ -91,10 +81,23 @@ class SearchCommand extends CConsoleCommand {
         }
     }
 
-    private static function prepareSolrDocument($object, $limit = 1000) {
+    private static function prepareEngineDocument($object, $limit = 1000) {
         $document = array();
         $document['id'] = (int) $object['id'];
-        $document['title'] = $object['event'];
+        $document['event'] = $object['event'];
+        $document['a'] = $object['a'];
+        $document['b'] = $object['b'];
+        $document['c'] = $object['c'];
+        $document['d'] = $object['d'];
+        $document['i'] = $object['i'];
+        
+        $document['a_str'] = $object['a'];
+        $document['b_str'] = $object['b'];
+        $document['c_str'] = $object['c'];
+        $document['d_str'] = $object['d'];
+        
+        $document['i'] = $object['i'];
+        $document['time_s'] = $object['time_s'];
 
        
         Yii::app()->collection1->updateFieldsWithoutCommit($document);
@@ -120,7 +123,6 @@ class SearchCommand extends CConsoleCommand {
      * @param <type> $core
      */
     public static function fillData($mtime, $limit, $collection = 12, $actionType = null, $sleep = 0) {
-       // var_dump(dirname(__FILE__).'/../../../Octopus/data/log.db');die();
         print "locking ... \n";
         // locking the command
         if ($actionType == "fullReindex") {
@@ -181,7 +183,7 @@ class SearchCommand extends CConsoleCommand {
             if ($size_of_data) {
                 foreach ($events as $post) {
                    
-                    self::prepareSolrDocument($post, $limit);
+                    self::prepareEngineDocument($post, $limit);
                     
                     $last_id = $post['id'];
                     if (isset($post['time']))
@@ -1083,7 +1085,7 @@ class SearchCommand extends CConsoleCommand {
     }
     
      public function actionIndexTerms($file = "",$collection=12) {
-        Yii::app()->Terms->rm("country_id:".$collection);
+        Yii::app()->collection1->rm("q:*:*");
         $csvFile = $file;
         $csv = self::readCSV($csvFile);
         $count = 0;
@@ -1095,20 +1097,24 @@ class SearchCommand extends CConsoleCommand {
             if ($count < 8)
                 continue;
             
-            for($i = 1;$i<$freq;$i++){
+            for($i = 1;$i<str_replace(",", "", $term[1]);$i++){
                 $document = array();
-                $document['id'] = $id+($collection*30000);
-                $document['term'] = $term[0];
-                $document['country_id'] = $collection;
-                Yii::app()->Terms->updateOneWithoutCommit($document);
-                
+                $document['id'] = $id;
+                $document['event'] = "search";
+                $document['a'] = $term[0];
+                $document['a_str'] = $term[0];
+                Yii::app()->collection1->updateOneWithoutCommit($document);
+                print "$count \n";
                 $id++;
             }
+            $count++;
+            Yii::app()->collection1->solrCommit();
             if($count%3==0)$freq--;
-            if ($count > 2400)
+            if ($count > 7400)
                 break;
+            
         }
-        Yii::app()->Terms->solrCommitWithOptimize();
+        Yii::app()->collection1->solrCommitWithOptimize();
     }
     
     public function actionRemoveTerms($collection=12) {
@@ -1124,214 +1130,5 @@ class SearchCommand extends CConsoleCommand {
         return $line_of_text;
     }
 
-    public function actionCategoriesMigration($collection = 2) {
-        fwrite(STDOUT, "Please insert the path that you want to create sql there. \n");
-        // get input
-        $path = trim(fgets(STDIN));
-        $file = $path . '/migration.txt';
-        $rollback_file = $path . '/rollback_migration.txt';
-        touch($file);
-        touch($rollback_file);
-        // Open the file to get existing content
-        $current = file_get_contents($file);
-        $old = file_get_contents($rollback_file);
-        self::getCategoriesLevel1Info($collection);
-        self::getCategoriesLevel2Info($collection);
-        $time = time();
-        $current = "SET autocommit = 0; START TRANSACTION;";
-        $old = "SET autocommit = 0; START TRANSACTION;";
-        $update = array(
-            1261 => array(194, 206),
-            1270 => array(192, 204),
-            1278 => array(196),
-            1280 => array(198),
-            1288 => array(1248),
-            1289 => array(200, 208),
-            212 => array(212),
-            214 => array(214),
-            216 => array(216),
-            218 => array(218),
-            220 => array(220),
-            222 => array(222),
-            224 => array(224),
-            226 => array(226),
-            228 => array(228),
-            1254 => array(194),
-            1255 => array(206),
-            232 => array(232),
-            234 => array(234),
-            236 => array(236),
-            238 => array(238),
-            240 => array(240),
-            242 => array(242),
-            244 => array(244),
-        );
-        foreach ($update as $k => $v) {
-            // Build Solr query
-            $options = array(
-                'fl' => 'id,tag_1_id,tag_2_id',
-                'qf' => 'title^1 description^1e-13 location^1e-13 tag_1_name^1 tag_2_name^1 city_name^1 price^1',
-                'q.op' => 'AND',
-                'bf' => "product(recip(sub($time,record_posted_time),1.27e-11,0.08,0.05),1000)^50",
-                'defType' => 'edismax',
-            );
-            // Filter by subcategroy id
-            if ($v) {
-                $options["fq"][] = "{!tag=dt}tag_2_id:(" . implode(" OR ", $v) . ")";
-                $options["facet"] = "true";
-                $options["facet.field"][] = '{!ex=dt}tag_2_id';
-            }
-            $query = "*:*";
-            $offset = 0;
-            $limit = 1000;
-            while (true) {
-                $results = SearchLib::execute($query, $offset, $limit, $options, $collection);
-                if (empty($results->response->docs))
-                    break;
-                foreach ($results->response->docs as $doc){
-                    $new_cat_id = $k;
-                    $old_cat_id = $doc->tag_2_id;
-                    if ($new_cat_id)
-                        $current .= "UPDATE posts SET new_cat_id=$new_cat_id WHERE id=$doc->id; \n";
-                      if($old_cat_id)$old .= "UPDATE posts SET new_cat_id=$old_cat_id WHERE id=$doc->id; \n";
-                }
-                $offset = $offset + $limit;
-            }
-        }
-        $cat = array(
-            1256 => array(194, 206),
-            1257 => array(194, 206),
-            1258 => array(194, 206),
-            1259 => array(194, 206),
-            1260 => array(194, 206),
-            
-            1263 => array(192, 204),
-            1264 => array(192, 204),
-            1265 => array(192, 204),
-            1266 => array(192, 204),
-            1267 => array(192, 204),
-            1268 => array(192, 204),
-            1269 => array(192, 204),
-
-            1272 => array(196),
-            1273 => array(196),
-            1274 => array(196),
-            1275 => array(196),
-            1276 => array(196),
-            1277 => array(196),
-//5adamat
-                       1281 => array(222),
-            1282 => array(222),
-            1283 => array(222),
-            1284 => array(222),
-            1285 => array(222),
-            1286 => array(222),
-            1287 => array(222),
-            1290 => array(242),
-            1291 => array(242),
-            1292 => array(242),
-            1293 => array(242),
-            1294 => array(242),
-            1295 => array(242),
-            1296 => array(242),
-            1297 => array(242),
-            1298 => array(242),
-            1299 => array(242),
-            1300 => array(242),
-            1301 => array(242),
-        );
-        foreach (self::$all_categoriesLevel1 as $category) {
-            foreach (self::$all_categoriesLevel2 as $subcategory) {
-                if (!isset($cat[$subcategory['category_id']]))
-                    continue;
-                if ($subcategory['parent_id'] != $category['category_id'])
-                    continue;
-
-                // Build Solr query
-                $options = array(
-                    'fl' => 'id,tag_1_id,tag_2_id',
-                    'qf' => 'title^1 description^1e-13 location^1e-13 tag_1_name^1 tag_2_name^1 city_name^1 price^1',
-                    'q.op' => 'AND',
-                    'bf' => "product(recip(sub($time,record_posted_time),1.27e-11,0.08,0.05),1000)^50",
-                    'defType' => 'edismax',
-                );
-                // Filter by subcategroy id
-                if ($cat[$subcategory['category_id']]) {
-                    $options["fq"][] = "{!tag=dt}tag_2_id:(" . implode(" OR ", $cat[$subcategory['category_id']]) . ")";
-                    $options["facet"] = "true";
-                    $options["facet.field"][] = '{!ex=dt}tag_2_id';
-                }
-                $category_name = str_replace("معروضات للبيع", " ", $category['category_name']);
-                $category_name = str_replace("سيارات ومركبات", "السيارات و المركبات", $category['category_name']);
-                $category_name = str_replace("عقارات", "العقارات و الإسكان", $category['category_name']);
-                $category_name = str_replace(" و", " ", $category['category_name']);
-                $subcategory_name = str_replace(" و", " ", $subcategory['category_name']);
-                $subcategory_name = str_replace("-", " OR ", $subcategory_name);
-                $subcategory_name = str_replace("واكسسوارات", "", $subcategory_name);
-                $subcategory_name = str_replace("اكسسوارات", "", $subcategory_name);
-                $subcategory_name = str_replace("واكسسوراتها", "", $subcategory_name);
-                $subcategory_name = str_replace("اكسسوراتها", "", $subcategory_name);
-                $subcategory_name = str_replace("مستلزمات", "", $subcategory_name);
-                $subcategory_name = str_replace("/", " OR ", $subcategory_name);
-                $subcategory_name = str_replace("الطيور الحيوانات", "الطيور OR الحيوانات", $subcategory_name);
-                $query = $subcategory_name;
-                $offset = 0;
-                $limit = 1000;
-
-                while (true) {
-                   
-                    $results = SearchLib::execute($query, $offset, $limit, $options, $collection);
-                    if (empty($results->response->docs))
-                        break;
-                    foreach ($results->response->docs as $doc) {
-                        $new_cat_id = isset($subcategory['category_id']) ? $subcategory['category_id'] : $category['category_id'];
-                         $old_cat_id = isset($doc->tag_2_id) ? $doc->tag_2_id : $doc->tag_1_id;
-                        if ($new_cat_id)
-                            $current .= "UPDATE posts SET new_cat_id=$new_cat_id WHERE id=$doc->id; \n";
-                        if ($old_cat_id)
-                          $old .= "UPDATE posts SET new_cat_id=$old_cat_id WHERE id=$doc->id; \n";
-                    }
-                    $offset = $offset + $limit;
-                }
-            }
-        }
-        $current.="commit;";
-        $old.="commit;";
-        file_put_contents($file, $current);
-        file_put_contents($rollback_file, $old);
-    }
-    
-    
-    
-    public function actionPostsMigration($collection = 2) {
-        fwrite(STDOUT, "Please insert the path that you want to create sql there. \n");
-        // get input
-        $path = trim(fgets(STDIN));
-        $file = $path . '/posts_migration.sql';
-        touch($file);
-        // Open the file to get existing content
-        $current = file_get_contents($file);
-        $done = false;
-        $id = -1;
-        while (!$done) {
-            $sql = "select id,new_cat_id from posts where countries_id=$collection and id > $id order by id asc limit 15000 ;";
-            // execute the indexing query
-            $posts = self::getDbConnection()->createCommand($sql)->queryAll();
-            $count = sizeof($posts);
-            if ($count) {
-                $current = "SET autocommit = 0; START TRANSACTION;";
-                foreach ($posts as $post) {
-                    $current .= "UPDATE posts SET new_cat_id=" . $post['new_cat_id'] . " WHERE id=" . $post['id'] . "; \n";
-                    $id = $post['id'];
-                }
-            }
-            $current.="commit;";
-            file_put_contents($file, $current,FILE_APPEND);
-            $posts = array();
-            $current = "";
-        }
-
-        file_put_contents($file, $current,FILE_APPEND);
-    }
-
+ 
 }

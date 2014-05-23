@@ -1,0 +1,14 @@
+2014/05/23 22:06:15 [error] [exception.CException] exception 'CException' with message 'Property "CConsoleApplication.Terms" is not defined.' in /var/www/html/yii/framework/base/CComponent.php:130
+Stack trace:
+#0 /var/www/html/yii/framework/base/CModule.php(105): CComponent->__get('Terms')
+#1 /var/www/html/collective-intelligence/protected/commands/DACommand.php(1088): CModule->__get('Terms')
+#2 [internal function]: DACommand->actionIndexTerms('/var/www/html/d...', '1')
+#3 /var/www/html/yii/framework/console/CConsoleCommand.php(172): ReflectionMethod->invokeArgs(Object(DACommand), Array)
+#4 /var/www/html/yii/framework/console/CConsoleCommandRunner.php(71): CConsoleCommand->run(Array)
+#5 /var/www/html/yii/framework/console/CConsoleApplication.php(92): CConsoleCommandRunner->run(Array)
+#6 /var/www/html/yii/framework/base/CApplication.php(180): CConsoleApplication->processRequest()
+#7 /var/www/html/yii/framework/yiic.php(33): CApplication->run()
+#8 /var/www/html/collective-intelligence/protected/yiic.php(7): require_once('/var/www/html/y...')
+#9 /var/www/html/collective-intelligence/protected/yiic(4): require_once('/var/www/html/c...')
+#10 {main}
+---
